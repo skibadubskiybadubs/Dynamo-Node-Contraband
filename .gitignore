@@ -1,7 +1,18 @@
 /.claude
-*.md
 /tools/__pycache__
 /tools/common/__pycache__
-nul
+__pycache__/
+*.pyc
+
+# Dynamo Sandbox installation
+/.sandboxed/
+
+# Output files
+/output/
+
+# Test artifacts
 tests/graph_copy.dyn
 tests/integration_test.dyn
+tests/*_output.xml
+*.md
+nul

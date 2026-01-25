@@ -1,5 +1,5 @@
 dynamo:
-  cli_path: "C:\\Program Files\\Autodesk\\Revit 2025\\AddIns\\DynamoForRevit\\DynamoCLI.exe"
+  cli_path: "C:\\GitHub\\Dynamo-Node-Contraband\\.sandboxed\\DynamoCLI.exe"
   version: "3.3"
   engine: "CPython3"
   default_timeout: 300
