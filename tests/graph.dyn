@@ -1,0 +1,151 @@
+{
+  "Uuid": "1966390b-e3ba-4080-a73b-1770d2c41d37",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "graph",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "Id": "f0216957-e451-4f20-9d2b-bd9f88c6b3c6",
+      "NodeType": "NumberInputNode",
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "6bea04e8331e47c8b77c276f046ea459",
+          "Name": "",
+          "Description": "Double",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "NumberType": "Double",
+      "InputValue": 42.0
+    },
+    {
+      "Id": "a8793584-ab35-45d3-a65d-9d218183d099",
+      "NodeType": "PythonScriptNode",
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Inputs": [
+        {
+          "Id": "d9c091db586140fd80bffe65d05a4037",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "64aeda7375fa4e35b7991913df6cd075",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script.",
+      "Code": "OUT = IN[0] * 2",
+      "Engine": "CPython3",
+      "EngineName": "CPython3",
+      "VariableInputPorts": true
+    }
+  ],
+  "Connectors": [
+    {
+      "Id": "a2fa595a-5056-4be5-a470-71c3803dcaff",
+      "Start": "6bea04e8331e47c8b77c276f046ea459",
+      "End": "d9c091db586140fd80bffe65d05a4037",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": null,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "3.3",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "8.2",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "3.3.0.6316",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "f0216957-e451-4f20-9d2b-bd9f88c6b3c6",
+        "Name": "Number",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 50.0,
+        "Y": 100.0
+      },
+      {
+        "Id": "a8793584-ab35-45d3-a65d-9d218183d099",
+        "Name": "Doubler",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 250.0,
+        "Y": 100.0
+      }
+    ],
+    "Annotations": [],
+    "X": 0.0,
+    "Y": 0.0,
+    "Zoom": 1.0
+  }
+}

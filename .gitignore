@@ -1,0 +1,7 @@
+/.claude
+*.md
+/tools/__pycache__
+/tools/common/__pycache__
+nul
+tests/graph_copy.dyn
+tests/integration_test.dyn
