@@ -15,4 +15,6 @@ tests/graph_copy.dyn
 tests/integration_test.dyn
 tests/*_output.xml
 *.md
+!README.md
 nul
+/.vscode
