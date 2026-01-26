@@ -85,6 +85,54 @@ dynamo:
 
 If DynamoForRevit fails with an assembly loading error, manually copy `System.Configuration.ConfigurationManager.dll` from `.sandboxed\` into the DynamoForRevit directory.
 
+## Use with Revit
+
+You can establish connection with running Revit instance by first installing the plugin:
+```bash
+powershell.exe -ExecutionPolicy Bypass -File "C:\GitHub\Dynamo-Node-Contraband\Revit\DynamoCliAddIn\install.ps1"
+```
+
+Then, open Revit project and test the connection:
+```bash
+python -m tools.dynamo_execute_revit --ping 2>&1
+```
+Output on success:
+```bash
+{
+  "success": true,
+  "command": "ping",
+  "data": {
+    "message": "pong",
+    "revit_version": "2025",
+    "document_name": "revit_test",
+    "dynamo_loaded": false
+  }
+}
+```
+
+Then, open Dynamo project in Revit and test the connection again:
+```bash
+python -m tools.dynamo_execute_revit --ping
+```
+Output on success:
+```bash
+{
+  "success": true,
+  "command": "ping",
+  "data": {
+    "message": "pong",
+    "revit_version": "2025",
+    "document_name": "revit_test",
+    "dynamo_loaded": true
+  }
+}
+```
+
+You can now try to execute the running Dynamo script:
+```bash
+python -m tools.dynamo_execute_revit tests\revit_test.dyn
+```
+
 ## Usage Examples
 
 ### Read a graph
