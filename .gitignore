@@ -18,3 +18,7 @@ tests/*_output.xml
 !README.md
 nul
 /.vscode
+
+# C# build output
+Revit/DynamoCliAddIn/bin/
+Revit/DynamoCliAddIn/obj/

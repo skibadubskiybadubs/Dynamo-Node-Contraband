@@ -22,7 +22,58 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Edit `config/dynamo.yaml`:
+### Automatic Setup (Recommended)
+
+The configurator tool detects installed Dynamo environments, manages profiles, and fixes known dependency issues.
+
+**1. Detect installations and save profiles:**
+
+```bash
+python -m tools.common.configurate_dynamo detect --save
+```
+
+This scans for Dynamo Sandbox (`.sandboxed/`) and DynamoForRevit (`C:\Program Files\Autodesk\Revit {year}\AddIns\DynamoForRevit\`) installations. Each one is saved as a named profile in `config/dynamo.yaml` (e.g. `sandbox`, `revit_2025`). The tool also detects the .NET framework (net48 for Revit 2024, net8.0 for Revit 2025+) and infers the Python engine accordingly.
+
+**2. Switch between environments:**
+
+```bash
+python -m tools.common.configurate_dynamo switch revit_2025
+python -m tools.common.configurate_dynamo switch revit_2024
+python -m tools.common.configurate_dynamo switch sandbox
+```
+
+This updates `dynamo.cli_path`, `dynamo.version`, and `dynamo.engine` in the config file so all other tools use the selected environment.
+
+**3. Validate an environment:**
+
+```bash
+python -m tools.common.configurate_dynamo validate
+python -m tools.common.configurate_dynamo validate --profile revit_2025
+```
+
+Runs three health checks: CLI executable exists, critical DLLs are present, and the CLI starts without assembly loading errors.
+
+**4. Fix missing dependencies:**
+
+DynamoForRevit installations ship without `System.Configuration.ConfigurationManager.dll`, a dependency DynamoCLI needs at startup. The Sandbox installation *does* include it. The `fix` command copies this DLL from `.sandboxed/` into the target DynamoForRevit directory.
+
+```bash
+# Preview what will be copied
+python -m tools.common.configurate_dynamo fix --profile revit_2025 --dry-run
+
+# Apply the fix (requires administrator shell for Program Files paths)
+python -m tools.common.configurate_dynamo fix --profile revit_2025
+```
+
+**5. Show current config:**
+
+```bash
+python -m tools.common.configurate_dynamo show
+```
+
+### Manual Configuration (Fallback)
+
+If the configurator tool doesn't work, edit `config/dynamo.yaml` directly:
 
 ```yaml
 dynamo:
@@ -31,6 +82,8 @@ dynamo:
   engine: "CPython3"
   default_timeout: 300
 ```
+
+If DynamoForRevit fails with an assembly loading error, manually copy `System.Configuration.ConfigurationManager.dll` from `.sandboxed\` into the DynamoForRevit directory.
 
 ## Usage Examples
 

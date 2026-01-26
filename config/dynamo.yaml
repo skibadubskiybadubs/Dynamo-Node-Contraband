@@ -27,6 +27,9 @@ node_templates:
     NodeType: StringInputNode
     Replication: Disabled
     Description: Creates a string
+ipc:
+  pipe_name: DynamoCliAddIn
+  timeout: 120
 profiles:
   sandbox:
     cli_path: C:\GitHub\Dynamo-Node-Contraband\.sandboxed\DynamoCLI.exe
