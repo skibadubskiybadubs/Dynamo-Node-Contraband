@@ -102,7 +102,7 @@ Output on success:
   "success": true,
   "command": "ping",
   "data": {
-    "message": "pong",
+    "message": "pong",                                // Revit responede back to call
     "revit_version": "2025",
     "document_name": "revit_test",
     "dynamo_loaded": false
@@ -123,7 +123,7 @@ Output on success:
     "message": "pong",
     "revit_version": "2025",
     "document_name": "revit_test",
-    "dynamo_loaded": true
+    "dynamo_loaded": true                             // Detected opened Dynamo graph in Revit
   }
 }
 ```
@@ -132,6 +132,217 @@ You can now try to execute the running Dynamo script:
 ```bash
 python -m tools.dynamo_execute_revit tests\revit_test.dyn
 ```
+Output on success:
+```bash
+{
+  "id": "3c094bad-b9cf-4204-8955-8a92e8a73577",
+  "success": true,
+  "command": "execute",
+  "data": {
+    "graph_path": "C:\\GitHub\\Dynamo-Node-Contraband\\tests\\revit_test.dyn",
+    "already_open": true,                             // 'true' means the graph is currently opened in Dynamo
+    "evaluation_took_place": false,                   // 'false' means Dynamo used its cached values from the already-running graph rather than re-evaluating
+    "evaluation_succeeded": true,
+    "evaluation_error": null,
+    "node_count": 3,
+    "nodes": [
+      {
+        "id": "c4b56bfc-d289-4b54-be75-44f1d637624d",
+        "name": "Select Model Element",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "Wall",                            // Selected Revit Elements
+          "string": "Wall",
+          "id": "1658741",
+          "name": "Generic - 200mm"
+        }
+      },
+      {
+        "id": "318e5628-3634-46cd-b5e3-90ee9c1821cf",
+        "name": "Element By Id",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "Wall",                            // Selected Revit Elements
+          "string": "Wall",
+          "id": "1658741",
+          "name": "Generic - 200mm"
+        }
+      },
+      {
+        "id": "78360635-dbc7-4875-99c1-c73551df6e47",
+        "name": "Element.Id",
+        "type": "FunctionNode",
+        "state": "Active",
+        "value": 1658741                              // Selected Revit Elements
+      }
+    ]
+  },
+  "error": null
+}
+```
+
+Now you can access the data from Dynamo graph opened in Revit in real-time.
+For example here the graph was in Automatic run mode. 
+Another element was selected, but the graph has not been re-saved.
+And the tool picked up the new result:
+```bash
+python -m tools.dynamo_execute_revit tests\revit_test.dyn
+{
+  "id": "c4c86d84-042f-4a10-a661-3634fe0fd823",
+  "success": true,
+  "command": "execute",
+  "data": {
+    "graph_path": "C:\\GitHub\\Dynamo-Node-Contraband\\tests\\revit_test.dyn",
+    "already_open": true,
+    "evaluation_took_place": false,                   // Still used Dynamo's cached data
+    "evaluation_succeeded": true,
+    "evaluation_error": null,
+    "node_count": 3,
+    "nodes": [
+      {
+        "id": "c4b56bfc-d289-4b54-be75-44f1d637624d",
+        "name": "Select Model Element",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "FamilyInstance",
+          "string": "750 x 2000mm",
+          "id": "1658821",
+          "name": "750 x 2000mm"
+        }
+      },
+      {
+        "id": "318e5628-3634-46cd-b5e3-90ee9c1821cf",
+        "name": "Element By Id",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "FamilyInstance",
+          "string": "750 x 2000mm",
+          "id": "1658821",
+          "name": "750 x 2000mm"
+        }
+      },
+      {
+        "id": "78360635-dbc7-4875-99c1-c73551df6e47",
+        "name": "Element.Id",
+        "type": "FunctionNode",
+        "state": "Active",
+        "value": 1658821                              // New Revit Element withour re-saving Dynamo graph
+      }
+    ]
+  },
+  "error": null
+}
+```
+
+Another test. Now graph in Manual run mode.
+Selected new Revit object, didn't re-save or re-run the graph.
+```bash
+python -m tools.dynamo_execute_revit tests\revit_test.dyn
+{
+  "id": "42751bdd-93fd-44e2-a653-ac0c1a749737",
+  "success": true,
+  "command": "execute",
+  "data": {
+    "graph_path": "C:\\GitHub\\Dynamo-Node-Contraband\\tests\\revit_test.dyn",
+    "already_open": true,
+    "evaluation_took_place": true,                    // Didn't use Cached data from Dynamo!
+    "evaluation_succeeded": true,
+    "evaluation_error": null,
+    "node_count": 3,
+    "nodes": [
+      {
+        "id": "c4b56bfc-d289-4b54-be75-44f1d637624d",
+        "name": "Select Model Element",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "FamilyInstance",
+          "string": "600 x 900mm",
+          "id": "1658944",                            // But it didn't pick up the latest selection (still old value)
+          "name": "600 x 900mm"
+        }
+      },
+      {
+        "id": "318e5628-3634-46cd-b5e3-90ee9c1821cf",
+        "name": "Element By Id",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "FamilyInstance",
+          "string": "600 x 900mm",
+          "id": "1658944",
+          "name": "600 x 900mm"
+        }
+      },
+      {
+        "id": "78360635-dbc7-4875-99c1-c73551df6e47",
+        "name": "Element.Id",
+        "type": "FunctionNode",
+        "state": "Active",
+        "value": 1658944
+      }
+    ]
+  },
+  "error": null
+}
+```
+However, after this command run - it did re-run the graph, and all the nodes in the Graph opened in Dynamo updated their outputs.
+And when I re-run the command again - it saccessfully pick up those values:
+```bash
+python -m tools.dynamo_execute_revit tests\revit_test.dyn
+{
+  "id": "6458fee1-6042-4a3f-9bde-1a00bf418d11",
+  "success": true,
+  "command": "execute",
+  "data": {
+    "graph_path": "C:\\GitHub\\Dynamo-Node-Contraband\\tests\\revit_test.dyn",
+    "already_open": true,
+    "evaluation_took_place": false,
+    "evaluation_succeeded": true,
+    "evaluation_error": null,
+    "node_count": 3,
+    "nodes": [
+      {
+        "id": "c4b56bfc-d289-4b54-be75-44f1d637624d",
+        "name": "Select Model Element",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "Wall",
+          "string": "Wall",
+          "id": "1658741",                // The new selection after re-running the command
+          "name": "Generic - 200mm"
+        }
+      },
+      {
+        "id": "318e5628-3634-46cd-b5e3-90ee9c1821cf",
+        "name": "Element By Id",
+        "type": "ExtensionNode",
+        "state": "Active",
+        "value": {
+          "_type": "Wall",
+          "string": "Wall",
+          "id": "1658741",
+          "name": "Generic - 200mm"
+        }
+      },
+      {
+        "id": "78360635-dbc7-4875-99c1-c73551df6e47",
+        "name": "Element.Id",
+        "type": "FunctionNode",
+        "state": "Active",
+        "value": 1658741
+      }
+    ]
+  },
+  "error": null
+}
+```
+So I think if the Dynamo graph is in automatic mode, it should return the data after the graph has been run.
 
 ## Usage Examples
 

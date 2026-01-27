@@ -34,8 +34,18 @@ public sealed class DynamoExecutionHandler : IExternalEventHandler
         {
             try
             {
-                var response = ProcessRequest(pending.Request, app);
-                pending.Completion.SetResult(response);
+                if (pending.Request.Command.Equals("execute", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Execute commands are async - they start graph execution and return
+                    // immediately. The TCS is completed later by the EvaluationCompleted
+                    // callback, after the Revit main thread is free to process Dynamo work.
+                    HandleExecuteAsync(pending.Request, app, pending.Completion);
+                }
+                else
+                {
+                    var response = ProcessRequest(pending.Request, app);
+                    pending.Completion.SetResult(response);
+                }
             }
             catch (Exception ex)
             {
@@ -56,7 +66,6 @@ public sealed class DynamoExecutionHandler : IExternalEventHandler
         {
             "ping" => HandlePing(request, app),
             "status" => HandleStatus(request, app),
-            "execute" => HandleExecute(request, app),
             _ => PipeResponse.Fail(request.Id, request.Command,
                 $"Unknown command: {request.Command}")
         };
@@ -89,7 +98,8 @@ public sealed class DynamoExecutionHandler : IExternalEventHandler
         });
     }
 
-    private PipeResponse HandleExecute(PipeRequest request, UIApplication app)
+    private void HandleExecuteAsync(PipeRequest request, UIApplication app,
+        TaskCompletionSource<PipeResponse> completion)
     {
         // Extract graph_path from payload
         string? graphPath = null;
@@ -102,26 +112,23 @@ public sealed class DynamoExecutionHandler : IExternalEventHandler
         }
 
         if (string.IsNullOrWhiteSpace(graphPath))
-            return PipeResponse.Fail(request.Id, "execute", "Missing 'graph_path' in payload.");
+        {
+            completion.SetResult(PipeResponse.Fail(request.Id, "execute",
+                "Missing 'graph_path' in payload."));
+            return;
+        }
 
         // Check Dynamo is loaded
         var dynamoModel = DynamoGraphRunner.GetDynamoModel();
         if (dynamoModel == null)
-            return PipeResponse.Fail(request.Id, "execute",
-                "DYNAMO_NOT_LOADED: Open Dynamo in Revit before executing graphs.");
-
-        // Execute the graph
-        var result = DynamoGraphRunner.Execute(dynamoModel, graphPath);
-
-        if (!result.IsSuccess)
-            return PipeResponse.Fail(request.Id, "execute", result.ErrorMessage ?? "Unknown error");
-
-        return PipeResponse.Ok(request.Id, "execute", new Dictionary<string, object?>
         {
-            ["graph_path"] = graphPath,
-            ["node_count"] = result.NodeOutputs?.Count ?? 0,
-            ["nodes"] = result.NodeOutputs
-        });
+            completion.SetResult(PipeResponse.Fail(request.Id, "execute",
+                "DYNAMO_NOT_LOADED: Open Dynamo in Revit before executing graphs."));
+            return;
+        }
+
+        // Start async execution - TCS will be completed by EvaluationCompleted callback
+        DynamoGraphRunner.ExecuteAsync(dynamoModel, graphPath, request.Id, completion);
     }
 
     private sealed record PendingRequest(PipeRequest Request, TaskCompletionSource<PipeResponse> Completion);

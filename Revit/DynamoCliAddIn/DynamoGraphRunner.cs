@@ -12,8 +12,6 @@ namespace DynamoCliAddIn;
 /// </summary>
 public static class DynamoGraphRunner
 {
-    private const int EvalTimeoutMs = 120_000;
-
     /// <summary>
     /// Check if DynamoRevit is loaded and return the model if available.
     /// </summary>
@@ -38,60 +36,112 @@ public static class DynamoGraphRunner
     }
 
     /// <summary>
-    /// Execute a .dyn graph and return node outputs.
-    /// Must be called on the Revit main thread (inside IExternalEventHandler.Execute).
+    /// Start graph execution asynchronously. Must be called on the Revit main thread.
+    /// Returns immediately - the TCS is completed later by the EvaluationCompleted callback
+    /// after the Revit main thread is free to process Dynamo's scheduled work.
     /// </summary>
-    public static GraphExecutionResult Execute(DynamoModel model, string graphPath)
+    public static void ExecuteAsync(DynamoModel model, string graphPath,
+        string requestId, TaskCompletionSource<PipeResponse> completion)
     {
         if (!File.Exists(graphPath))
-            return GraphExecutionResult.Error($"Graph file not found: {graphPath}");
+        {
+            completion.SetResult(PipeResponse.Fail(requestId, "execute",
+                $"Graph file not found: {graphPath}"));
+            return;
+        }
 
         try
         {
-            // Open the graph (forceManualExecutionMode: true to prevent auto-run)
-            model.OpenFileFromPath(graphPath, forceManualExecutionMode: true);
+            // Check if the graph is already the current workspace
+            var currentWs = model.CurrentWorkspace as HomeWorkspaceModel;
+            bool alreadyOpen = currentWs != null &&
+                string.Equals(currentWs.FileName, graphPath, StringComparison.OrdinalIgnoreCase);
 
-            var workspace = model.CurrentWorkspace as HomeWorkspaceModel;
-            if (workspace == null)
-                return GraphExecutionResult.Error("Failed to open graph as HomeWorkspaceModel.");
-
-            // Set up completion wait
-            using var completionEvent = new ManualResetEventSlim(false);
-            bool evaluationSucceeded = false;
-            string? evalError = null;
-
-            void OnEvalCompleted(object? sender, EvaluationCompletedEventArgs e)
+            if (!alreadyOpen)
             {
-                evaluationSucceeded = e.EvaluationSucceeded;
-                if (e.Error != null) evalError = e.Error.Message;
-                completionEvent.Set();
+                // Open the graph from file
+                model.OpenFileFromPath(graphPath, forceManualExecutionMode: false);
+                currentWs = model.CurrentWorkspace as HomeWorkspaceModel;
             }
 
-            workspace.EvaluationCompleted += OnEvalCompleted;
-            try
+            if (currentWs == null)
             {
-                // Trigger execution
-                workspace.Run();
-
-                // Wait for completion
-                if (!completionEvent.Wait(EvalTimeoutMs))
-                    return GraphExecutionResult.Error($"Graph execution timed out after {EvalTimeoutMs / 1000}s.");
-            }
-            finally
-            {
-                workspace.EvaluationCompleted -= OnEvalCompleted;
+                completion.SetResult(PipeResponse.Fail(requestId, "execute",
+                    "Failed to get HomeWorkspaceModel."));
+                return;
             }
 
-            if (!evaluationSucceeded)
-                return GraphExecutionResult.Error($"Graph evaluation failed: {evalError ?? "unknown error"}");
+            var workspace = currentWs;
 
-            // Capture outputs from all nodes
-            var nodeOutputs = CaptureNodeOutputs(workspace);
-            return GraphExecutionResult.Success(nodeOutputs);
+            // Subscribe to completion BEFORE triggering Run
+            EventHandler<EvaluationCompletedEventArgs>? handler = null;
+            handler = (sender, e) =>
+            {
+                workspace.EvaluationCompleted -= handler;
+                try
+                {
+                    // Step 1: Read event args safely
+                    bool? tookPlace = null;
+                    bool? succeeded = null;
+                    string? evalError = null;
+                    try { tookPlace = e.EvaluationTookPlace; } catch { }
+                    try { succeeded = e.EvaluationSucceeded; } catch { }
+                    try { evalError = e.Error?.Message; } catch { }
+
+                    // Step 2: Capture node outputs
+                    List<Dictionary<string, object?>> nodeOutputs;
+                    try
+                    {
+                        nodeOutputs = CaptureNodeOutputs(workspace);
+                    }
+                    catch (Exception captureEx)
+                    {
+                        completion.SetResult(PipeResponse.Ok(requestId, "execute",
+                            new Dictionary<string, object?>
+                            {
+                                ["graph_path"] = graphPath,
+                                ["already_open"] = alreadyOpen,
+                                ["evaluation_took_place"] = tookPlace,
+                                ["evaluation_succeeded"] = succeeded,
+                                ["capture_error"] = $"{captureEx.GetType().Name}: {captureEx.Message}",
+                                ["capture_stack"] = captureEx.StackTrace?.Substring(0, Math.Min(500, captureEx.StackTrace.Length)),
+                                ["node_count"] = 0,
+                                ["nodes"] = new List<Dictionary<string, object?>>()
+                            }));
+                        return;
+                    }
+
+                    completion.SetResult(PipeResponse.Ok(requestId, "execute",
+                        new Dictionary<string, object?>
+                        {
+                            ["graph_path"] = graphPath,
+                            ["already_open"] = alreadyOpen,
+                            ["evaluation_took_place"] = tookPlace,
+                            ["evaluation_succeeded"] = succeeded,
+                            ["evaluation_error"] = evalError,
+                            ["node_count"] = nodeOutputs.Count,
+                            ["nodes"] = nodeOutputs
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    completion.TrySetResult(PipeResponse.Fail(requestId, "execute",
+                        $"Handler error: {ex.GetType().Name}: {ex.Message}"));
+                }
+            };
+
+            workspace.EvaluationCompleted += handler;
+
+            // Trigger execution - returns immediately, work is scheduled
+            workspace.Run();
+
+            // DO NOT WAIT HERE - return to free the Revit main thread.
+            // The EvaluationCompleted callback will complete the TCS.
         }
         catch (Exception ex)
         {
-            return GraphExecutionResult.Error($"Graph execution error: {ex.Message}");
+            completion.SetResult(PipeResponse.Fail(requestId, "execute",
+                $"Graph execution error: {ex.Message}"));
         }
     }
 
@@ -114,20 +164,4 @@ public static class DynamoGraphRunner
 
         return results;
     }
-}
-
-/// <summary>
-/// Result of graph execution containing node outputs or error info.
-/// </summary>
-public sealed class GraphExecutionResult
-{
-    public bool IsSuccess { get; private init; }
-    public string? ErrorMessage { get; private init; }
-    public List<Dictionary<string, object?>>? NodeOutputs { get; private init; }
-
-    public static GraphExecutionResult Success(List<Dictionary<string, object?>> outputs) =>
-        new() { IsSuccess = true, NodeOutputs = outputs };
-
-    public static GraphExecutionResult Error(string message) =>
-        new() { IsSuccess = false, ErrorMessage = message };
 }
