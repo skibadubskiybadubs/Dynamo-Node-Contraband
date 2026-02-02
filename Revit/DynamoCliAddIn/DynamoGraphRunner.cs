@@ -41,7 +41,7 @@ public static class DynamoGraphRunner
     /// after the Revit main thread is free to process Dynamo's scheduled work.
     /// </summary>
     public static void ExecuteAsync(DynamoModel model, string graphPath,
-        string requestId, TaskCompletionSource<PipeResponse> completion)
+        string requestId, TaskCompletionSource<PipeResponse> completion, bool forceReopen = false)
     {
         if (!File.Exists(graphPath))
         {
@@ -57,9 +57,9 @@ public static class DynamoGraphRunner
             bool alreadyOpen = currentWs != null &&
                 string.Equals(currentWs.FileName, graphPath, StringComparison.OrdinalIgnoreCase);
 
-            if (!alreadyOpen)
+            if (!alreadyOpen || forceReopen)
             {
-                // Open the graph from file
+                // Open the graph from file (force reload from disk if requested)
                 model.OpenFileFromPath(graphPath, forceManualExecutionMode: false);
                 currentWs = model.CurrentWorkspace as HomeWorkspaceModel;
             }
@@ -73,60 +73,40 @@ public static class DynamoGraphRunner
 
             var workspace = currentWs;
 
-            // Subscribe to completion BEFORE triggering Run
+            // Subscribe to completion BEFORE triggering Run.
+            // When evaluation_took_place is true, CachedValues may not be settled yet.
+            // Re-trigger Run() to get a second callback where values are finalized.
             EventHandler<EvaluationCompletedEventArgs>? handler = null;
             handler = (sender, e) =>
             {
-                workspace.EvaluationCompleted -= handler;
                 try
                 {
-                    // Step 1: Read event args safely
-                    bool? tookPlace = null;
-                    bool? succeeded = null;
-                    string? evalError = null;
-                    try { tookPlace = e.EvaluationTookPlace; } catch { }
-                    try { succeeded = e.EvaluationSucceeded; } catch { }
-                    try { evalError = e.Error?.Message; } catch { }
-
-                    // Step 2: Capture node outputs
-                    List<Dictionary<string, object?>> nodeOutputs;
-                    try
+                    if (e.EvaluationTookPlace)
                     {
-                        nodeOutputs = CaptureNodeOutputs(workspace);
-                    }
-                    catch (Exception captureEx)
-                    {
-                        completion.SetResult(PipeResponse.Ok(requestId, "execute",
-                            new Dictionary<string, object?>
-                            {
-                                ["graph_path"] = graphPath,
-                                ["already_open"] = alreadyOpen,
-                                ["evaluation_took_place"] = tookPlace,
-                                ["evaluation_succeeded"] = succeeded,
-                                ["capture_error"] = $"{captureEx.GetType().Name}: {captureEx.Message}",
-                                ["capture_stack"] = captureEx.StackTrace?.Substring(0, Math.Min(500, captureEx.StackTrace.Length)),
-                                ["node_count"] = 0,
-                                ["nodes"] = new List<Dictionary<string, object?>>()
-                            }));
+                        // Values not settled yet - keep subscription and re-run.
+                        // Second callback will have took_place=false with correct CachedValues.
+                        workspace.Run();
                         return;
                     }
 
-                    completion.SetResult(PipeResponse.Ok(requestId, "execute",
+                    // Values are settled - capture outputs
+                    workspace.EvaluationCompleted -= handler;
+
+                    var nodeOutputs = CaptureNodeOutputs(workspace);
+                    completion.TrySetResult(PipeResponse.Ok(requestId, "execute",
                         new Dictionary<string, object?>
                         {
                             ["graph_path"] = graphPath,
                             ["already_open"] = alreadyOpen,
-                            ["evaluation_took_place"] = tookPlace,
-                            ["evaluation_succeeded"] = succeeded,
-                            ["evaluation_error"] = evalError,
                             ["node_count"] = nodeOutputs.Count,
                             ["nodes"] = nodeOutputs
                         }));
                 }
                 catch (Exception ex)
                 {
+                    workspace.EvaluationCompleted -= handler;
                     completion.TrySetResult(PipeResponse.Fail(requestId, "execute",
-                        $"Handler error: {ex.GetType().Name}: {ex.Message}"));
+                        $"Output capture error: {ex.GetType().Name}: {ex.Message}"));
                 }
             };
 

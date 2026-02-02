@@ -22,3 +22,5 @@ nul
 # C# build output
 Revit/DynamoCliAddIn/bin/
 Revit/DynamoCliAddIn/obj/
+/_projects
+.cursorrules

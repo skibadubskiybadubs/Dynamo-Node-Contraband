@@ -99,17 +99,19 @@ def get_status(timeout: int = DEFAULT_TIMEOUT) -> dict:
     return response.get("data", {})
 
 
-def execute_graph(graph_path: str, timeout: int = DEFAULT_TIMEOUT) -> dict:
+def execute_graph(graph_path: str, timeout: int = DEFAULT_TIMEOUT, reload: bool = False) -> dict:
     """Execute a Dynamo graph via Revit IPC.
 
     Args:
         graph_path: Absolute path to the .dyn file.
         timeout: Timeout in seconds.
+        reload: Force reload of the graph from disk.
 
     Returns:
         Response dict with execution results.
     """
-    response = send_request("execute", {"graph_path": graph_path}, timeout=timeout)
+    payload = {"graph_path": graph_path, "reload": reload}
+    response = send_request("execute", payload, timeout=timeout)
     return response
 
 

@@ -342,7 +342,7 @@ python -m tools.dynamo_execute_revit tests\revit_test.dyn
   "error": null
 }
 ```
-So I think if the Dynamo graph is in automatic mode, it should return the data after the graph has been run.
+So I think if the Dynamo graph is in Manual mode, it should return the data after the graph has been run.
 
 ## Usage Examples
 

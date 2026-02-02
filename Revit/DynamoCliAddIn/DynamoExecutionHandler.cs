@@ -103,12 +103,25 @@ public sealed class DynamoExecutionHandler : IExternalEventHandler
     {
         // Extract graph_path from payload
         string? graphPath = null;
-        if (request.Payload != null && request.Payload.TryGetValue("graph_path", out var pathObj))
+        bool reload = false;
+
+        if (request.Payload != null)
         {
-            if (pathObj is JsonElement jsonEl)
-                graphPath = jsonEl.GetString();
-            else
-                graphPath = pathObj?.ToString();
+            if (request.Payload.TryGetValue("graph_path", out var pathObj))
+            {
+                if (pathObj is JsonElement jsonEl)
+                    graphPath = jsonEl.GetString();
+                else
+                    graphPath = pathObj?.ToString();
+            }
+
+            if (request.Payload.TryGetValue("reload", out var reloadObj))
+            {
+                if (reloadObj is JsonElement jsonEl)
+                    reload = jsonEl.GetBoolean();
+                else if (reloadObj is bool b)
+                    reload = b;
+            }
         }
 
         if (string.IsNullOrWhiteSpace(graphPath))
@@ -128,7 +141,7 @@ public sealed class DynamoExecutionHandler : IExternalEventHandler
         }
 
         // Start async execution - TCS will be completed by EvaluationCompleted callback
-        DynamoGraphRunner.ExecuteAsync(dynamoModel, graphPath, request.Id, completion);
+        DynamoGraphRunner.ExecuteAsync(dynamoModel, graphPath, request.Id, completion, forceReopen: reload);
     }
 
     private sealed record PendingRequest(PipeRequest Request, TaskCompletionSource<PipeResponse> Completion);
