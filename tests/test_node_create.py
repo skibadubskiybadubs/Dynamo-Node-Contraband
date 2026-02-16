@@ -98,6 +98,36 @@ class TestStringNode:
         assert str_nodes[0]._extra["InputValue"] == "test_value"
 
 
+class TestRelativePositioning:
+    def test_right_of_by_name(self, runner, graph_copy):
+        """Number node is at (50, 100). --right-of should place at (350, 100)."""
+        result = runner.invoke(main, [graph_copy, "python", "--name", "RightNode", "--right-of", "Number"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["position"]["x"] == 350.0
+        assert data["position"]["y"] == 100.0
+
+    def test_below_by_guid(self, runner, graph_copy):
+        """Number node at (50, 100). --below should place at (50, 250)."""
+        NUMBER_NODE_ID = "f0216957-e451-4f20-9d2b-bd9f88c6b3c6"
+        result = runner.invoke(main, [graph_copy, "python", "--name", "BelowNode", "--below", NUMBER_NODE_ID])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["position"]["x"] == 50.0
+        assert data["position"]["y"] == 250.0
+
+    def test_right_of_and_below(self, runner, graph_copy):
+        """--right-of Number (50,100) + --below Doubler (250,100) → (350, 250)."""
+        result = runner.invoke(main, [
+            graph_copy, "python", "--name", "Combo",
+            "--right-of", "Number", "--below", "Doubler"
+        ])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["position"]["x"] == 350.0
+        assert data["position"]["y"] == 250.0
+
+
 class TestNodeView:
     def test_node_view_created(self, runner, graph_copy):
         result = runner.invoke(main, [graph_copy, "python", "--name", "ViewTest", "--position", "300,400"])

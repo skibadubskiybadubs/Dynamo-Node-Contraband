@@ -41,23 +41,45 @@ def output_result(data: dict):
 
 @click.command()
 @click.argument("graph_path", type=click.Path(exists=True))
-@click.argument("node_id")
+@click.argument("node_id", required=False, default=None)
+@click.option("--node-name", help="Find Python node by name (alternative to NODE_ID)")
 @click.option("--code", help="Python code to inject (inline)")
 @click.option("--file", "code_file", type=click.Path(exists=True), help="Python file to inject")
 @click.option("--get", "get_code", is_flag=True, help="Get current code from node")
 @click.option("--no-validate", is_flag=True, help="Skip syntax validation")
-def main(graph_path: str, node_id: str, code: Optional[str], code_file: Optional[str],
+def main(graph_path: str, node_id: Optional[str], node_name: Optional[str],
+         code: Optional[str], code_file: Optional[str],
          get_code: bool, no_validate: bool):
     """Inject or retrieve Python code in a Python Script node.
 
     GRAPH_PATH: Path to the .dyn file to modify.
-    NODE_ID: GUID of the Python Script node.
+    NODE_ID: GUID of the Python Script node (optional if --node-name is used).
     """
     try:
         graph = load_graph(graph_path)
 
-        # Find the node
-        node = graph.get_node(node_id)
+        # Resolve node from node_id or node_name
+        if not node_id and not node_name:
+            output_result({"success": False, "error": "Provide NODE_ID or --node-name"})
+            sys.exit(1)
+
+        if node_id and node_name:
+            output_result({"success": False, "error": "Provide NODE_ID or --node-name, not both"})
+            sys.exit(1)
+
+        node = None
+        if node_name:
+            try:
+                node = graph.get_node_by_name(node_name)
+            except ValueError as e:
+                output_result({"success": False, "error": str(e)})
+                sys.exit(1)
+            if not node:
+                output_result({"success": False, "error": f"Node not found by name: {node_name}"})
+                sys.exit(1)
+            node_id = node.Id
+        else:
+            node = graph.get_node(node_id)
         if not node:
             output_result({"success": False, "error": f"Node not found: {node_id}"})
             sys.exit(1)

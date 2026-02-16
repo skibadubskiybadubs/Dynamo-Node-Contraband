@@ -99,6 +99,40 @@ class TestConnect:
         assert data["success"] is False
 
 
+class TestConnectByName:
+    def test_connect_by_name(self, runner, graph_copy):
+        """Remove existing connection, then reconnect using node names."""
+        runner.invoke(main, [graph_copy, "--disconnect", EXISTING_CONNECTOR_ID])
+        result = runner.invoke(main, [graph_copy, "--from-node", "Number", "--to-node", "Doubler"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["action"] == "connected"
+
+    def test_mixed_mode(self, runner, graph_copy):
+        """Use --from-node with --to port GUID."""
+        runner.invoke(main, [graph_copy, "--disconnect", EXISTING_CONNECTOR_ID])
+        result = runner.invoke(main, [graph_copy, "--from-node", "Number", "--to", PYTHON_IN_PORT])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+
+    def test_name_not_found(self, runner, graph_copy):
+        result = runner.invoke(main, [graph_copy, "--from-node", "NoSuchNode", "--to-node", "Doubler"])
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert "not found" in data["error"].lower()
+
+    def test_no_available_input(self, runner, graph_copy):
+        """Doubler's only input is already connected, so --to-node should fail."""
+        result = runner.invoke(main, [graph_copy, "--from-node", "Number", "--to-node", "Doubler"])
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert "no available input" in data["error"].lower()
+
+
 class TestDisconnect:
     def test_disconnect(self, runner, graph_copy):
         result = runner.invoke(main, [graph_copy, "--disconnect", EXISTING_CONNECTOR_ID])

@@ -10,6 +10,7 @@ from click.testing import CliRunner
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from tools.dynamo_graph_read import main
+from tools.common.graph_io import load_graph
 
 
 @pytest.fixture
@@ -108,6 +109,73 @@ class TestConnectors:
         assert "to_port" in conn
         assert "from_node" in conn
         assert "to_node" in conn
+
+
+class TestNodeByName:
+    def test_find_by_name(self, runner, graph_copy):
+        result = runner.invoke(main, [graph_copy, "--node-name", "Doubler"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["node"]["type"] == "PythonScriptNode"
+        assert "code" in data["node"]
+
+    def test_name_not_found(self, runner, graph_copy):
+        result = runner.invoke(main, [graph_copy, "--node-name", "NonexistentNode"])
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert "not found" in data["error"].lower()
+
+    def test_name_ambiguous(self, runner, graph_copy):
+        """Create ambiguity by renaming a node, then query by name."""
+        from tools.common.graph_io import load_graph as _load, save_graph
+        g = _load(graph_copy)
+        for nv in g.NodeViews:
+            if nv.Name == "Number":
+                nv.Name = "Doubler"
+        save_graph(g, graph_copy)
+
+        result = runner.invoke(main, [graph_copy, "--node-name", "Doubler"])
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert "multiple" in data["error"].lower()
+
+
+class TestNameResolution:
+    def test_exact_match(self, graph_copy):
+        graph = load_graph(graph_copy)
+        node = graph.get_node_by_name("Number")
+        assert node is not None
+        assert node.NodeType == "NumberInputNode"
+
+    def test_case_insensitive(self, graph_copy):
+        graph = load_graph(graph_copy)
+        node = graph.get_node_by_name("number")
+        assert node is not None
+        assert node.NodeType == "NumberInputNode"
+
+    def test_partial_match(self, graph_copy):
+        graph = load_graph(graph_copy)
+        results = graph.find_nodes_by_name("ble")
+        names = [graph.get_node_view(n.Id).Name for n in results]
+        assert "Doubler" in names
+
+    def test_no_match(self, graph_copy):
+        graph = load_graph(graph_copy)
+        assert graph.get_node_by_name("NonexistentNode") is None
+        assert graph.find_nodes_by_name("NonexistentNode") == []
+
+    def test_ambiguous_match(self, graph_copy):
+        """Two nodes with the same name should raise ValueError."""
+        graph = load_graph(graph_copy)
+        # Rename Number node to "Doubler" to create ambiguity
+        for nv in graph.NodeViews:
+            if nv.Name == "Number":
+                nv.Name = "Doubler"
+        with pytest.raises(ValueError, match="Multiple nodes match"):
+            graph.get_node_by_name("Doubler")
 
 
 class TestErrorHandling:

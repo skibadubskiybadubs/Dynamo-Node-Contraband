@@ -103,6 +103,34 @@ class TestInjectFromFile:
         assert "IN[0] ** 2" in graph.get_node(PYTHON_NODE_ID).code
 
 
+class TestNodeNameResolution:
+    def test_inject_by_name(self, runner, graph_copy):
+        new_code = "OUT = IN[0] + 5"
+        result = runner.invoke(main, [graph_copy, "--node-name", "Doubler", "--code", new_code])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["code_length"] == len(new_code)
+
+        graph = load_graph(graph_copy)
+        node = graph.get_node(PYTHON_NODE_ID)
+        assert node.code == new_code
+
+    def test_name_not_found(self, runner, graph_copy):
+        result = runner.invoke(main, [graph_copy, "--node-name", "NoSuchNode", "--code", "OUT = 1"])
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert "not found" in data["error"].lower()
+
+    def test_name_resolves_to_non_python(self, runner, graph_copy):
+        result = runner.invoke(main, [graph_copy, "--node-name", "Number", "--code", "OUT = 1"])
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert "not a Python" in data["error"]
+
+
 class TestNoOperation:
     def test_no_code_or_file_or_get(self, runner, graph_copy):
         result = runner.invoke(main, [graph_copy, PYTHON_NODE_ID])

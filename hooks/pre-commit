@@ -19,7 +19,7 @@ fi
 echo "Running unit tests (relevant code changed)..."
 
 # Run pytest on unit test files only (exclude IPC E2E tests that need Revit)
-python -m pytest tests/test_graph_read.py tests/test_node_create.py tests/test_node_connect.py tests/test_code_inject.py tests/test_execute.py tests/test_output_read.py -q
+python -m pytest tests/test_graph_read.py tests/test_node_create.py tests/test_node_connect.py tests/test_code_inject.py tests/test_execute.py tests/test_output_read.py tests/test_node_delete.py tests/test_node_edit.py -q
 
 if [ $? -ne 0 ]; then
     echo ""

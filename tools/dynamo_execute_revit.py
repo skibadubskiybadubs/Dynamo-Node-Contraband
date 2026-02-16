@@ -43,8 +43,8 @@ def output_result(data: dict):
 @click.option("--ping", "do_ping", is_flag=True, help="Test connection to Revit")
 @click.option("--status", "do_status", is_flag=True, help="Get Revit status")
 @click.option("--timeout", type=int, default=120, help="Timeout in seconds")
-@click.option("--reload", is_flag=True, help="Force reload of graph from disk")
-def main(graph_path: Optional[str], do_ping: bool, do_status: bool, timeout: int, reload: bool):
+@click.option("--no-reload", is_flag=True, help="Skip reloading graph from disk (default: reload)")
+def main(graph_path: Optional[str], do_ping: bool, do_status: bool, timeout: int, no_reload: bool):
     """Execute a Dynamo graph via the Revit IPC bridge.
 
     GRAPH_PATH: Path to the .dyn file to execute (optional if using --ping or --status).
@@ -70,6 +70,7 @@ def main(graph_path: Optional[str], do_ping: bool, do_status: bool, timeout: int
             output_result({"success": False, "error": f"Graph not found: {graph_path}"})
             sys.exit(1)
 
+        reload = not no_reload
         result = execute_graph(graph_path, timeout=timeout, reload=reload)
         output_result(result)
         if not result.get("success"):
