@@ -113,7 +113,6 @@ def main(graph_path: str, node_id: str, code: Optional[str], code_file: Optional
         # Save graph
         abs_path = str(Path(graph_path).resolve())
         save_graph(graph, abs_path)
-        print(f"DEBUG: Saved graph to {abs_path}")
 
         output_result({
             "success": True,

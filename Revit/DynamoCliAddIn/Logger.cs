@@ -4,13 +4,13 @@ namespace DynamoCliAddIn;
 
 /// <summary>
 /// Simple file-based logger for diagnosing add-in issues.
-/// Writes timestamped entries to %TEMP%/DynamoCliAddIn.log.
+/// Writes timestamped entries to %USERPROFILE%/DynamoCliAddIn.log.
 /// Thread-safe: queues messages and writes from a background thread.
 /// </summary>
 public static class Logger
 {
     private static readonly string LogPath = Path.Combine(
-        Path.GetTempPath(), "DynamoCliAddIn.log");
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "DynamoCliAddIn.log");
     private static readonly BlockingCollection<string> Queue = new(1024);
     private static readonly Thread WriterThread;
 
