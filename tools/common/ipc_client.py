@@ -109,10 +109,25 @@ def execute_graph(graph_path: str, timeout: int = DEFAULT_TIMEOUT, reload: bool 
 
     Returns:
         Response dict with execution results.
+
+    Raises:
+        IpcError: If execution fails or returns an error.
     """
     payload = {"graph_path": graph_path, "reload": reload}
     response = send_request("execute", payload, timeout=timeout)
     return response
+
+
+def is_available(timeout: int = 5) -> bool:
+    """Check if the Revit IPC bridge is reachable.
+
+    Returns True if a ping succeeds, False otherwise.
+    """
+    try:
+        ping(timeout=timeout)
+        return True
+    except IpcError:
+        return False
 
 
 def _connect_pipe(timeout: int) -> int:
@@ -156,8 +171,13 @@ def _connect_pipe(timeout: int) -> int:
                 time.sleep(CONNECT_RETRY_DELAY)
 
             elif error_code == 231:  # ERROR_PIPE_BUSY
-                # Wait for pipe to become available
-                win32pipe.WaitNamedPipe(PIPE_NAME, 2000)
+                # Wait for pipe to become available. WaitNamedPipe itself can
+                # fail with ERROR_FILE_NOT_FOUND if the server is recycling
+                # its pipe instance, so treat that as a transient retry.
+                try:
+                    win32pipe.WaitNamedPipe(PIPE_NAME, 2000)
+                except pywintypes.error:
+                    time.sleep(CONNECT_RETRY_DELAY)
 
             else:
                 raise IpcConnectionError(

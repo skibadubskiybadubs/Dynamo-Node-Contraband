@@ -16,20 +16,24 @@ public class App : IExternalApplication
     {
         try
         {
+            Logger.Info("=== DynamoCliAddIn starting ===");
             var handler = new DynamoExecutionHandler();
             _externalEvent = ExternalEvent.Create(handler);
             _pipeServer = new PipeServer(handler, _externalEvent);
             _pipeServer.Start();
+            Logger.Info("Pipe server started on \\\\.\\pipe\\DynamoCliAddIn");
             return Result.Succeeded;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.Error("Startup failed", ex);
             return Result.Failed;
         }
     }
 
     public Result OnShutdown(UIControlledApplication application)
     {
+        Logger.Info("=== DynamoCliAddIn shutting down ===");
         _pipeServer?.Dispose();
         _externalEvent?.Dispose();
         return Result.Succeeded;

@@ -35,6 +35,8 @@ public static class DynamoGraphRunner
         }
     }
 
+    private const int EvalTimeoutMs = 90_000; // 90s safety timeout for evaluation callback
+
     /// <summary>
     /// Start graph execution asynchronously. Must be called on the Revit main thread.
     /// Returns immediately - the TCS is completed later by the EvaluationCompleted callback
@@ -57,9 +59,10 @@ public static class DynamoGraphRunner
             bool alreadyOpen = currentWs != null &&
                 string.Equals(currentWs.FileName, graphPath, StringComparison.OrdinalIgnoreCase);
 
+            Logger.Info($"ExecuteAsync: graph={Path.GetFileName(graphPath)} alreadyOpen={alreadyOpen} forceReopen={forceReopen}");
+
             if (!alreadyOpen || forceReopen)
             {
-                // Open the graph from file (force reload from disk if requested)
                 model.OpenFileFromPath(graphPath, forceManualExecutionMode: false);
                 currentWs = model.CurrentWorkspace as HomeWorkspaceModel;
             }
@@ -73,37 +76,39 @@ public static class DynamoGraphRunner
 
             var workspace = currentWs;
 
-            // Subscribe to completion BEFORE triggering Run.
-            // When evaluation_took_place is true, CachedValues may not be settled yet.
-            // Re-trigger Run() to get a second callback where values are finalized.
+            // Subscribe to EvaluationCompleted BEFORE triggering Run.
+            // The callback fires after Dynamo finishes evaluating all nodes.
             EventHandler<EvaluationCompletedEventArgs>? handler = null;
             handler = (sender, e) =>
             {
                 try
                 {
-                    if (e.EvaluationTookPlace)
+                    workspace.EvaluationCompleted -= handler;
+
+                    Logger.Info($"EvaluationCompleted: succeeded={e.EvaluationSucceeded} tookPlace={e.EvaluationTookPlace}");
+
+                    if (!e.EvaluationSucceeded)
                     {
-                        // Values not settled yet - keep subscription and re-run.
-                        // Second callback will have took_place=false with correct CachedValues.
-                        workspace.Run();
+                        var errorMsg = e.Error?.Message ?? "Unknown evaluation error";
+                        Logger.Warn($"Graph evaluation failed: {errorMsg}");
+                        completion.TrySetResult(PipeResponse.Fail(requestId, "execute",
+                            $"Graph evaluation failed. {errorMsg}"));
                         return;
                     }
 
-                    // Values are settled - capture outputs
-                    workspace.EvaluationCompleted -= handler;
-
                     var nodeOutputs = CaptureNodeOutputs(workspace);
+                    Logger.Info($"Captured {nodeOutputs.Count} node outputs");
                     completion.TrySetResult(PipeResponse.Ok(requestId, "execute",
                         new Dictionary<string, object?>
                         {
                             ["graph_path"] = graphPath,
-                            ["already_open"] = alreadyOpen,
                             ["node_count"] = nodeOutputs.Count,
                             ["nodes"] = nodeOutputs
                         }));
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error("Output capture error", ex);
                     workspace.EvaluationCompleted -= handler;
                     completion.TrySetResult(PipeResponse.Fail(requestId, "execute",
                         $"Output capture error: {ex.GetType().Name}: {ex.Message}"));
@@ -112,7 +117,22 @@ public static class DynamoGraphRunner
 
             workspace.EvaluationCompleted += handler;
 
-            // Trigger execution - returns immediately, work is scheduled
+            // Safety timeout: if EvaluationCompleted never fires, complete with error.
+            var timer = new System.Threading.Timer(_ =>
+            {
+                if (!completion.Task.IsCompleted)
+                {
+                    workspace.EvaluationCompleted -= handler;
+                    Logger.Warn($"Evaluation timeout after {EvalTimeoutMs / 1000}s for {Path.GetFileName(graphPath)}");
+                    completion.TrySetResult(PipeResponse.Fail(requestId, "execute",
+                        $"Evaluation timeout: Dynamo did not complete within {EvalTimeoutMs / 1000}s."));
+                }
+            }, null, EvalTimeoutMs, Timeout.Infinite);
+
+            // Dispose timer when TCS completes (by callback or timeout).
+            completion.Task.ContinueWith(_ => timer.Dispose());
+
+            // Trigger execution - returns immediately, work is scheduled on the Revit thread.
             workspace.Run();
 
             // DO NOT WAIT HERE - return to free the Revit main thread.

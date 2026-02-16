@@ -75,11 +75,11 @@ public sealed class PipeServer : IDisposable
 
                 HandleConnection(pipe);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Pipe error - continue listening unless cancelled
                 if (_cts.IsCancellationRequested) break;
-                Thread.Sleep(500); // Brief pause before retrying
+                Logger.Error("Pipe server error, retrying in 500ms", ex);
+                Thread.Sleep(500);
             }
             finally
             {
@@ -114,6 +114,8 @@ public sealed class PipeServer : IDisposable
                 return;
             }
 
+            Logger.Info($"Request: cmd={request.Command} id={request.Id}");
+
             // Enqueue request for the Revit main thread
             var responseTask = _handler.EnqueueRequest(request);
             _externalEvent.Raise();
@@ -121,12 +123,14 @@ public sealed class PipeServer : IDisposable
             // Wait for the response with timeout
             if (!responseTask.Wait(TimeoutMs))
             {
+                Logger.Warn($"Timeout after {TimeoutMs / 1000}s: cmd={request.Command} id={request.Id}");
                 WriteResponse(pipe, PipeResponse.Fail(request.Id, request.Command,
                     $"Timeout: Revit did not process the request within {TimeoutMs / 1000}s. " +
                     "Revit may be busy with a modal dialog or long-running operation."));
                 return;
             }
 
+            Logger.Info($"Response: cmd={request.Command} success={responseTask.Result.Success}");
             WriteResponse(pipe, responseTask.Result);
         }
         catch (Exception ex)

@@ -49,6 +49,7 @@ public sealed class DynamoExecutionHandler : IExternalEventHandler
             }
             catch (Exception ex)
             {
+                Logger.Error($"Handler error for cmd={pending.Request.Command}", ex);
                 var errorResponse = PipeResponse.Fail(
                     pending.Request.Id,
                     pending.Request.Command,
