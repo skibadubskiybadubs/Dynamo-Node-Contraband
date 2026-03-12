@@ -1,32 +1,48 @@
 dynamo:
-  cli_path: "C:\\GitHub\\Dynamo-Node-Contraband\\.sandboxed\\DynamoCLI.exe"
-  version: "3.3"
-  engine: "CPython3"
+  cli_path: C:\GitHub\Dynamo-Node-Contraband\.sandboxed\DynamoCLI.exe
+  version: '3.3'
+  engine: CPython3
   default_timeout: 300
-
+  active_profile: sandbox
 paths:
-  graphs_dir: "./tests"
-  output_dir: "./output"
-
+  graphs_dir: ./tests
+  output_dir: ./output
 node_templates:
   python:
-    ConcreteType: "PythonNodeModels.PythonNode, PythonNodeModels"
-    NodeType: "PythonScriptNode"
-    Engine: "CPython3"
-    EngineName: "CPython3"
+    ConcreteType: PythonNodeModels.PythonNode, PythonNodeModels
+    NodeType: PythonScriptNode
+    Engine: CPython3
+    EngineName: CPython3
     VariableInputPorts: true
-    Replication: "Disabled"
-    Description: "Runs an embedded Python script."
-
+    Replication: Disabled
+    Description: Runs an embedded Python script.
   number:
-    ConcreteType: "CoreNodeModels.Input.DoubleInput, CoreNodeModels"
-    NodeType: "NumberInputNode"
-    NumberType: "Double"
-    Replication: "Disabled"
-    Description: "Creates a number"
-
+    ConcreteType: CoreNodeModels.Input.DoubleInput, CoreNodeModels
+    NodeType: NumberInputNode
+    NumberType: Double
+    Replication: Disabled
+    Description: Creates a number
   string:
-    ConcreteType: "CoreNodeModels.Input.StringInput, CoreNodeModels"
-    NodeType: "StringInputNode"
-    Replication: "Disabled"
-    Description: "Creates a string"
+    ConcreteType: CoreNodeModels.Input.StringInput, CoreNodeModels
+    NodeType: StringInputNode
+    Replication: Disabled
+    Description: Creates a string
+ipc:
+  pipe_name: DynamoCliAddIn
+  timeout: 120
+profiles:
+  sandbox:
+    cli_path: C:\GitHub\Dynamo-Node-Contraband\.sandboxed\DynamoCLI.exe
+    version: '3.3'
+    engine: CPython3
+    framework: net8.0
+  revit_2024:
+    cli_path: C:\Program Files\Autodesk\Revit 2024\AddIns\DynamoForRevit\DynamoCLI.exe
+    version: '3.3'
+    engine: IronPython2
+    framework: net48
+  revit_2025:
+    cli_path: C:\Program Files\Autodesk\Revit 2025\AddIns\DynamoForRevit\DynamoCLI.exe
+    version: '3.3'
+    engine: CPython3
+    framework: net8.0

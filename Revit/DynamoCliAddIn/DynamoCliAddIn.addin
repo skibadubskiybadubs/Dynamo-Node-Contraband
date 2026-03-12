@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>DynamoCliAddIn</Name>
+    <Assembly>DynamoCliAddIn.dll</Assembly>
+    <FullClassName>DynamoCliAddIn.App</FullClassName>
+    <AddInId>B5F5C6A2-7E3D-4A1B-9C8E-2F6D0E4A3B71</AddInId>
+    <VendorId>DynamoNodeContraband</VendorId>
+    <VendorDescription>Named Pipe IPC bridge for Dynamo CLI tools</VendorDescription>
+  </AddIn>
+</RevitAddIns>

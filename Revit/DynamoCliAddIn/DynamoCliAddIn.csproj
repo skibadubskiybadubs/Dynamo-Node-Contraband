@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>DynamoCliAddIn</RootNamespace>
+    <AssemblyName>DynamoCliAddIn</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="DynamoCore">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\AddIns\DynamoForRevit\DynamoCore.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="ProtoCore">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\AddIns\DynamoForRevit\ProtoCore.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="DynamoRevitDS">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\AddIns\DynamoForRevit\Revit\DynamoRevitDS.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitServices">
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\AddIns\DynamoForRevit\Revit\RevitServices.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

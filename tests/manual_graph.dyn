@@ -1,0 +1,260 @@
+{
+  "Uuid": "cd004cef-5b39-404d-b9e7-888a98423b2c",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "manual_graph",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Input.IntegerSlider, CoreNodeModels",
+      "NumberType": "Integer",
+      "MaximumValue": 100,
+      "MinimumValue": 0,
+      "StepValue": 1,
+      "Id": "79eee30ee82b4874a09db72b252fe0df",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "e8fac31f393b48fd82efc970ccf1ed50",
+          "Name": "",
+          "Description": "Int64",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Produces integer values",
+      "InputValue": 69
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "Id": "aeacdc86d3574cbe918e2fc342b6edc7",
+      "NodeType": "CodeBlockNode",
+      "Inputs": [
+        {
+          "Id": "20f163bdf9fe4783b7f48ba70e2c7f95",
+          "Name": "x",
+          "Description": "x",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "48ae9d097dd747aabc95f9996ac70db3",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly",
+      "Code": "x*2;"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "import math\r\n\r\nOUT = math.sqrt(IN[0])",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "854236db94e0440ca70f5e61f6ec0084",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "e0dfa29f98f247699a7d681da79ed9ac",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "8a05a115d9dc409a895b8c8c27d04ae6",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "Id": "541766ca79f24ec3aaa3450edb0804b8",
+      "NodeType": "FunctionNode",
+      "Inputs": [
+        {
+          "Id": "71bebb4b20ab40f484a8a3442cd03892",
+          "Name": "x",
+          "Description": "Integer value, double value or string\n\nvar[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "0b33741ecb4941c6a878eda6c8204e29",
+          "Name": "y",
+          "Description": "Integer value, double value or string\n\nvar[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "12113a241eee41c8bdf7fbb31efb6168",
+          "Name": "var",
+          "Description": "The sum of two input numbers, or the concatenation of two strings",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "FunctionSignature": "+@var[]..[],var[]..[]",
+      "Replication": "Auto",
+      "Description": "Returns addition of x and y\n\n+ (x: var[]..[], y: var[]..[]): var[]..[]"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "e8fac31f393b48fd82efc970ccf1ed50",
+      "End": "20f163bdf9fe4783b7f48ba70e2c7f95",
+      "Id": "3cbc9802afdc4b228c880453e5930116",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "48ae9d097dd747aabc95f9996ac70db3",
+      "End": "e0dfa29f98f247699a7d681da79ed9ac",
+      "Id": "a6e5b2b058df4891be984e6288a9be3d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "48ae9d097dd747aabc95f9996ac70db3",
+      "End": "0b33741ecb4941c6a878eda6c8204e29",
+      "Id": "bb1bf242864843bf80fc7733e9299b61",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "8a05a115d9dc409a895b8c8c27d04ae6",
+      "End": "71bebb4b20ab40f484a8a3442cd03892",
+      "Id": "d8dd2e50943a42ada092be7696e5c28d",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": true,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "3.3",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "8.2",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "3.3.0.6316",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "79eee30ee82b4874a09db72b252fe0df",
+        "Name": "Integer Slider",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 76.40000000000003,
+        "Y": 92.40000000000002
+      },
+      {
+        "Id": "aeacdc86d3574cbe918e2fc342b6edc7",
+        "Name": "mult",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 97.0,
+        "Y": 249.0
+      },
+      {
+        "Id": "854236db94e0440ca70f5e61f6ec0084",
+        "Name": "squareroot",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 255.20000000000022,
+        "Y": 248.40000000000003
+      },
+      {
+        "Id": "541766ca79f24ec3aaa3450edb0804b8",
+        "Name": "+",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 176.40000000000003,
+        "Y": 384.8
+      }
+    ],
+    "Annotations": [],
+    "X": 0.0,
+    "Y": 0.0,
+    "Zoom": 1.0
+  }
+}

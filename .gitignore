@@ -15,4 +15,12 @@ tests/graph_copy.dyn
 tests/integration_test.dyn
 tests/*_output.xml
 *.md
+!README.md
 nul
+/.vscode
+
+# C# build output
+Revit/DynamoCliAddIn/bin/
+Revit/DynamoCliAddIn/obj/
+/_projects
+.cursorrules

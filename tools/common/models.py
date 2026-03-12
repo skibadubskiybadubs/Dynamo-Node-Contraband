@@ -283,6 +283,38 @@ class Graph:
 
         return True
 
+    def find_nodes_by_name(self, name: str) -> List[Node]:
+        """Find nodes whose NodeView.Name contains `name` (case-insensitive)."""
+        name_lower = name.lower()
+        results = []
+        for nv in self.NodeViews:
+            if name_lower in nv.Name.lower():
+                node = self.get_node(nv.Id)
+                if node:
+                    results.append(node)
+        return results
+
+    def get_node_by_name(self, name: str) -> Optional[Node]:
+        """Find exactly one node by exact name match (case-insensitive).
+
+        Returns None if no match. Raises ValueError if ambiguous (>1 match).
+        """
+        name_lower = name.lower()
+        matches = []
+        for nv in self.NodeViews:
+            if nv.Name.lower() == name_lower:
+                node = self.get_node(nv.Id)
+                if node:
+                    matches.append(node)
+        if len(matches) == 0:
+            return None
+        if len(matches) == 1:
+            return matches[0]
+        guids = [n.Id for n in matches]
+        raise ValueError(
+            f"Multiple nodes match '{name}': {guids}. Use --node with a GUID."
+        )
+
     def remove_connector(self, connector_id: str) -> bool:
         """Remove a connector from the graph."""
         for i, c in enumerate(self.Connectors):

@@ -106,3 +106,18 @@ def get_node_template(node_type: str) -> dict:
         raise ValueError(f"Unknown node type: {node_type}. Available: {list(templates.keys())}")
 
     return templates[node_type].copy()
+
+
+def invalidate_config_cache() -> None:
+    """Reset the cached configuration, forcing a reload on next access."""
+    global _config, _config_path
+    _config = None
+    _config_path = None
+
+
+def get_config_path() -> Path:
+    """Return the resolved config file path, loading config if needed."""
+    global _config_path
+    if _config_path is None:
+        load_config()
+    return _config_path

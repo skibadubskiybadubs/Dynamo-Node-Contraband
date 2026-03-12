@@ -82,15 +82,29 @@ def output_result(data: dict, as_json: bool = True):
 @click.argument("graph_path", type=click.Path(exists=True))
 @click.option("--nodes", is_flag=True, help="List all nodes with GUIDs")
 @click.option("--node", "node_id", help="Show specific node details by GUID")
+@click.option("--node-name", help="Show node details by name (alternative to --node)")
 @click.option("--connectors", is_flag=True, help="List all connections")
 @click.option("--json", "as_json", is_flag=True, default=True, help="Output as JSON (default)")
-def main(graph_path: str, nodes: bool, node_id: Optional[str], connectors: bool, as_json: bool):
+def main(graph_path: str, nodes: bool, node_id: Optional[str], node_name: Optional[str],
+         connectors: bool, as_json: bool):
     """Read and inspect a Dynamo graph file.
 
     GRAPH_PATH: Path to the .dyn file to read.
     """
     try:
         graph = load_graph(graph_path)
+
+        # Resolve node_name to node_id
+        if node_name:
+            try:
+                node = graph.get_node_by_name(node_name)
+            except ValueError as e:
+                output_result({"success": False, "error": str(e)})
+                sys.exit(1)
+            if not node:
+                output_result({"success": False, "error": f"Node not found by name: {node_name}"})
+                sys.exit(1)
+            node_id = node.Id
 
         # Show specific node
         if node_id:

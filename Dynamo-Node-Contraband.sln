@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Revit", "Revit", "{D64246B1-3E22-9D95-23C6-14262B074D58}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamoCliAddIn", "Revit\DynamoCliAddIn\DynamoCliAddIn.csproj", "{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE} = {D64246B1-3E22-9D95-23C6-14262B074D58}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E737CFA0-F895-45C4-8F62-419AC8C972E5}
+	EndGlobalSection
+EndGlobal

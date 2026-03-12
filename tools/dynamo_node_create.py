@@ -135,6 +135,14 @@ def output_result(data: dict):
     click.echo(json.dumps(data, indent=2))
 
 
+def _resolve_ref_node(graph, name_or_guid: str):
+    """Resolve a reference node by GUID first, then by name."""
+    node = graph.get_node(name_or_guid)
+    if node:
+        return node
+    return graph.get_node_by_name(name_or_guid)
+
+
 @click.command()
 @click.argument("graph_path", type=click.Path(exists=True))
 @click.argument("node_type", type=click.Choice(["python", "number", "string"]))
@@ -142,8 +150,11 @@ def output_result(data: dict):
 @click.option("--inputs", "num_inputs", type=int, default=1, help="Number of input ports (Python nodes only)")
 @click.option("--value", help="Initial value (Number/String nodes)")
 @click.option("--position", callback=parse_position, help="Position as 'x,y' (e.g., '100,200')")
+@click.option("--right-of", help="Place right of this node (name or GUID)")
+@click.option("--below", help="Place below this node (name or GUID)")
 def main(graph_path: str, node_type: str, name: Optional[str], num_inputs: int,
-         value: Optional[str], position: Tuple[float, float]):
+         value: Optional[str], position: Tuple[float, float],
+         right_of: Optional[str], below: Optional[str]):
     """Create a new node in a Dynamo graph.
 
     GRAPH_PATH: Path to the .dyn file to modify.
@@ -151,6 +162,37 @@ def main(graph_path: str, node_type: str, name: Optional[str], num_inputs: int,
     """
     try:
         graph = load_graph(graph_path)
+
+        # Resolve relative positioning
+        if right_of or below:
+            rel_x, rel_y = position  # defaults to (0, 0)
+            if right_of:
+                try:
+                    ref = _resolve_ref_node(graph, right_of)
+                except ValueError as e:
+                    output_result({"success": False, "error": str(e)})
+                    sys.exit(1)
+                if not ref:
+                    output_result({"success": False, "error": f"Reference node not found: {right_of}"})
+                    sys.exit(1)
+                ref_view = graph.get_node_view(ref.Id)
+                rel_x = ref_view.X + 300
+                if not below:
+                    rel_y = ref_view.Y
+            if below:
+                try:
+                    ref = _resolve_ref_node(graph, below)
+                except ValueError as e:
+                    output_result({"success": False, "error": str(e)})
+                    sys.exit(1)
+                if not ref:
+                    output_result({"success": False, "error": f"Reference node not found: {below}"})
+                    sys.exit(1)
+                ref_view = graph.get_node_view(ref.Id)
+                rel_y = ref_view.Y + 150
+                if not right_of:
+                    rel_x = ref_view.X
+            position = (rel_x, rel_y)
 
         # Create the appropriate node type
         if node_type == "python":

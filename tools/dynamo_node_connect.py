@@ -26,13 +26,33 @@ def output_result(data: dict):
     click.echo(json.dumps(data, indent=2))
 
 
+def _resolve_node(graph, name_or_guid: str):
+    """Resolve a node by GUID first, then by name."""
+    node = graph.get_node(name_or_guid)
+    if node:
+        return node
+    return graph.get_node_by_name(name_or_guid)
+
+
+def _find_first_unconnected_input(graph, node):
+    """Find the first input port on a node that has no incoming connection."""
+    connected_inputs = {c.End for c in graph.Connectors}
+    for port in node.Inputs:
+        if port.Id not in connected_inputs:
+            return port
+    return None
+
+
 @click.command()
 @click.argument("graph_path", type=click.Path(exists=True))
 @click.option("--from", "from_port", help="Source output port GUID")
 @click.option("--to", "to_port", help="Target input port GUID")
+@click.option("--from-node", help="Source node name (uses first output port)")
+@click.option("--to-node", help="Target node name (uses first unconnected input port)")
 @click.option("--disconnect", "disconnect_id", help="Connector GUID to disconnect")
 @click.option("--list-ports", "list_ports_node", help="List ports for a node GUID")
 def main(graph_path: str, from_port: Optional[str], to_port: Optional[str],
+         from_node: Optional[str], to_node: Optional[str],
          disconnect_id: Optional[str], list_ports_node: Optional[str]):
     """Connect or disconnect nodes in a Dynamo graph.
 
@@ -71,6 +91,37 @@ def main(graph_path: str, from_port: Optional[str], to_port: Optional[str],
                 "connector_id": disconnect_id
             })
             return
+
+        # Resolve --from-node to from_port
+        if from_node:
+            try:
+                src = _resolve_node(graph, from_node)
+            except ValueError as e:
+                output_result({"success": False, "error": str(e)})
+                sys.exit(1)
+            if not src:
+                output_result({"success": False, "error": f"Source node not found: {from_node}"})
+                sys.exit(1)
+            if not src.Outputs:
+                output_result({"success": False, "error": f"Source node '{from_node}' has no output ports"})
+                sys.exit(1)
+            from_port = src.Outputs[0].Id
+
+        # Resolve --to-node to to_port
+        if to_node:
+            try:
+                tgt = _resolve_node(graph, to_node)
+            except ValueError as e:
+                output_result({"success": False, "error": str(e)})
+                sys.exit(1)
+            if not tgt:
+                output_result({"success": False, "error": f"Target node not found: {to_node}"})
+                sys.exit(1)
+            avail = _find_first_unconnected_input(graph, tgt)
+            if not avail:
+                output_result({"success": False, "error": f"Target node '{to_node}' has no available input ports"})
+                sys.exit(1)
+            to_port = avail.Id
 
         # Connect
         if from_port and to_port:
