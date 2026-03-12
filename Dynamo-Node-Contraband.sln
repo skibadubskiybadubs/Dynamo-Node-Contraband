@@ -6,6 +6,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Revit", "Revit", "{D64246B1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamoCliAddIn", "Revit\DynamoCliAddIn\DynamoCliAddIn.csproj", "{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dynamo", "Dynamo", "{A1F3B2C4-D5E6-7890-ABCD-EF1234567890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContrabandaExtension", "Dynamo\Contrabanda\ContrabandaExtension.csproj", "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -16,12 +20,17 @@ Global
 		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2C3D4E5-F6A7-8901-BCDE-F12345678901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2C3D4E5-F6A7-8901-BCDE-F12345678901}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2C3D4E5-F6A7-8901-BCDE-F12345678901}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2C3D4E5-F6A7-8901-BCDE-F12345678901}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1B882DF7-EA97-0ABE-2B0A-FA20C990D8FE} = {D64246B1-3E22-9D95-23C6-14262B074D58}
+		{B2C3D4E5-F6A7-8901-BCDE-F12345678901} = {A1F3B2C4-D5E6-7890-ABCD-EF1234567890}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E737CFA0-F895-45C4-8F62-419AC8C972E5}

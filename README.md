@@ -455,6 +455,56 @@ Errors return:
 }
 ```
 
+## Contrabanda Dynamo Plugin
+
+A Dynamo view extension that embeds a live context panel inside the Dynamo GUI — the foundation for bringing Claude Code into Dynamo graphs.
+
+### What it does
+
+| Feature | Description |
+|---------|-------------|
+| Dynamo menu entry | Adds a top-level **Contrabanda** menu to the Dynamo menu bar |
+| Graph name | Displays the currently open Dynamo graph (live, updates on workspace switch) |
+| Revit project | Shows the currently open Revit document title |
+| Node selection | Footer updates in real time as nodes are selected / deselected on the canvas |
+| Mock chat window | Input bar + scrollable output + Send button (ready for Claude Code wiring) |
+
+### Prerequisites
+
+- Revit 2025 with Dynamo for Revit installed
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (`dotnet` on PATH)
+
+### Installation
+
+```bat
+cd Dynamo\Contrabanda
+install.bat
+```
+
+The script builds the DLL and deploys it alongside the extension manifest to `%APPDATA%\Dynamo\Dynamo Revit\<version>\extensions\Contrabanda\`.
+
+### Usage
+
+1. (Re)start Revit 2025 and open Dynamo
+2. Click **Contrabanda** in the Dynamo menu bar
+3. Select **Open Contrabanda**
+4. The panel opens — graph name and Revit project populate automatically
+5. Select nodes on the canvas to see their GUIDs appear in the footer
+
+### Source layout
+
+```
+Dynamo/
+└── Contrabanda/
+    ├── ContrabandaExtension.csproj   # C# project (net8.0-windows, WPF)
+    ├── ContrabandaExtension.xml      # Dynamo view extension manifest
+    ├── ContrabandaViewExtension.cs   # IViewExtension entry point
+    ├── install.bat                   # Build + deploy script
+    └── Views/
+        ├── ContrabandaWindow.xaml    # WPF layout
+        └── ContrabandaWindow.xaml.cs # Code-behind (events, node tracking)
+```
+
 ## License
 
 MIT
